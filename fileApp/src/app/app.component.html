@@ -1,0 +1,32 @@
+<div class="p-4">
+  <h1 class="text-2xl font-bold mb-4">CSV File Upload and Processing</h1>
+
+  <input type="file" (change)="onFileSelected($event)" />
+  <button class="ml-2 bg-blue-500 text-white px-4 py-2 rounded" (click)="uploadFile()">Upload</button>
+
+  <div class="mt-4">
+    <div *ngIf="uploadProgress > 0">
+      Upload Progress: {{uploadProgress}}%
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <h2 class="text-xl font-semibold mb-2">Processed Files</h2>
+    <table class="table-auto w-full">
+      <thead>
+        <tr>
+          <th class="px-4 py-2 text-left">File Name</th>
+          <th class="px-4 py-2 text-left">Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let file of files">
+          <td class="px-4 py-2">{{file.name}}</td>
+          <td class="px-4 py-2">
+            <button class="bg-green-500 text-white px-2 py-1 rounded" (click)="downloadFile(file.name)">Download</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
