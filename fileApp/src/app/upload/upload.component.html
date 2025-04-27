@@ -1,0 +1,7 @@
+<div class="container mt-5">
+    <h2>Upload to S3</h2>
+    <input type="file" (change)="onFileSelected($event)">
+    <button class="btn btn-primary mt-2" (click)="onUpload()">Upload</button>
+    <div *ngIf="uploadSuccess" class="alert alert-success mt-2">Upload Successful!</div>
+  </div>
+  

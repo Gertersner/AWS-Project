@@ -1,10 +1,14 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HttpClient, HttpEventType } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpEventType } from '@angular/common/http';
+import { UploadComponent } from './upload/upload.component';
+import { FileUploadComponent } from './file-upload/file-upload.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet,
+    HttpClientModule, UploadComponent, FileUploadComponent
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
