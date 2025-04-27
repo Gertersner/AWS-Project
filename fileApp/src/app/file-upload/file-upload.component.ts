@@ -1,74 +1,70 @@
-import { Component, OnInit } from '@angular/core';
-import { S3UploadService, S3File } from '../services/s3-upload.service';
+// src/app/file-upload/file-upload.component.ts
+import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpEventType } from '@angular/common/http';
+import { S3Service } from '../services/s3.service';
 
 @Component({
   selector: 'app-file-upload',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './file-upload.component.html',
-  styleUrl: './file-upload.component.scss'
+  styles: [`
+    .file-upload-container {
+      margin: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      margin: 5px;
+      padding: 5px 10px;
+    }
+  `]
 })
 export class FileUploadComponent {
-  files: S3File[] = [];
-  loading: boolean = true;
-  error: string | null = null;
-  
-  constructor(private s3Service: S3UploadService) {
-  }
-  
+  selectedFile: File | null = null;
+  uploadProgress: number = 0;
+  files: any[] = [];
+
+  constructor(@Inject('S3Service') private s3Service: S3Service) {}
+
   ngOnInit(): void {
     this.loadFiles();
   }
-  
-  loadFiles(): void {
-    this.loading = true;
-    this.error = null;
-    
-    this.s3Service.listFiles().subscribe({
-      next: (files) => {
-        this.files = files;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Failed to load files', err);
-        this.error = 'Failed to load files from S3';
-        this.loading = false;
+
+  onFileSelected(event: any): void {
+    this.selectedFile = event.target.files[0];
+  }
+
+  uploadFile(): void {
+    if (!this.selectedFile) return;
+
+    this.s3Service.uploadFile(this.selectedFile).subscribe(event => {
+      if (event.type === HttpEventType.UploadProgress && event.total) {
+        this.uploadProgress = Math.round(100 * event.loaded / event.total);
+      } else if (event.type === HttpEventType.Response) {
+        alert('Upload successful from file-upload component');
+        this.loadFiles();
       }
+    }, error => {
+      console.error('Upload failed', error);
     });
   }
-  
-  async downloadFile(file: S3File): Promise<void> {
-    try {
-      await this.s3Service.downloadFile(file.key, file.fileName);
-    } catch (error) {
-      console.error('Download failed', error);
-      // Show error message to user
-      alert('Failed to download file');
-    }
+
+  loadFiles(): void {
+    this.s3Service.listFiles().subscribe(data => {
+      this.files = data;
+    });
   }
-  
-  deleteFile(file: S3File): void {
-    if (confirm(`Are you sure you want to delete ${file.fileName}?`)) {
-      this.s3Service.deleteFile(file.key).subscribe({
-        next: () => {
-          // Remove file from the list
-          this.files = this.files.filter(f => f.key !== file.key);
-        },
-        error: (err) => {
-          console.error('Delete failed', err);
-          alert('Failed to delete file');
-        }
-      });
-    }
-  }
-  
-  formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+
+  downloadFile(fileName: string): void {
+    this.s3Service.downloadFile(fileName).subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+    });
   }
 }
